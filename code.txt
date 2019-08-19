@@ -1,0 +1,151 @@
+npm init
+package.json file will create.
+npm i express mongoose body-parser --save
+
+db.js
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/CRUDdb', (err) =>{
+	if(!err)
+		console.log('MongoDB connection succeeded.');
+	else
+		console.log('Error in Db Connection: ' + JSON.stringify(err, undefined, 2));
+	});
+module.exports = mongoose;
+
+npm i nodemon
+
+>nodemon db.js
+index.js
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const { mongoose } = require('./db.js');
+var app = express();
+app.use(bodyParser.json());
+app.listen(3000, () => console.log('Server Started at Port : 3000'));
+
+models
+
+employee.js
+const mongoose = require('mongoose');
+var Employee = mongoose.model('Employee', {
+name : { type: String },
+position: { type:String },
+office: { type :String } ,
+salary : { type : Number }
+});
+
+module.exports = Employee;
+
+
+controllers
+employeeControllers.js
+
+const express = require('express');
+var router = express.Router();
+
+var { Employee } = require('../models/employee');
+
+router.get('/', (req,res) => {
+Employee.find((err, docs) => {
+	if(!err) { res.send(docs); }
+	else
+	{ console.log('Error in Retriving Employee :' + JSON.stringify(err, undefined,2));
+	});
+});
+module.exports = router;
+
+var employeeController = require('./controllers/employeeConstroller.js');
+
+
+
+router.post('/', (req,res) =>{
+	var emp = new Employee({
+	name: req.body.name,
+	position: req.body.position,
+	office: req.body.office,
+	salary:req.body.salary,
+	});
+	emp.save((err, doc) =>{
+	if(!err){ 
+	res.send(doc);
+	 }
+	else { console.log('Error in Employee Save :' + JSON.stringify(err, undefined ,2));
+	});
+ });
+
+
+installed json formatter 
+https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=en
+
+for Get request 
+
+var ObjectId = require('mongoose').Types.ObjectId;
+
+router.get('/:id', (req, res) => {
+	if(!ObjectId.isValid(req.params.id))
+	return res.status(400).send(`No record with given Id : $ { req.params.id }` ) ;
+
+	Employee.findById(req.params.id, (err, doc) =>{ 
+	if(!err) { res.send(doc); }
+	else { console.log('Error in Retriving Employee : ' + JSON.stringify(err, underfined, 2)); }
+	});
+	
+});
+
+Id should be valid mongo DB Id. for  that we have to import Object Id from Mongoose.
+var ObjectId = require('mongoose').Types.ObjectId;
+
+router.put('/:id', (req,res) =>{
+	if(!ObjectId.isValid(req.params.id))
+	return res.status(400).send(`No record with given Id : $ { req.params.id }` ) ;
+
+	var emp = {
+	name: req.body.name,
+	position:req.body.position,
+	office: req.body.office,
+	salary:req.body.salary
+	};
+	Employee.findByIdAndUpdate(req.params.id, { $set: emp}, { new : true }, (err,doc) =>{
+	if(!err) { res.send(doc); }
+	else { console.log('Error in Employee Update : ' + JSON.stringify(err, undefined, 2)); }
+	}); 
+});
+
+router.delete('/:id', ()=>{
+	if(!ObjectId.isValid(req.params.id))
+		return res.status(400).send('No records with given Id : ${ req.params.id } ');
+	
+	Employee.findByIdRemove(req.params.id, (err,doc) =>{
+	if(!err) { res.send(doc); }
+	else { console.log('Error in Employee Delete :' + JSON.stringify(err, underfined,2)); }
+	});
+});
+
+------------
+Create new Angular Applicaiton
+using 
+>ng new AngularApp
+>cd AngullarApp
+ ng serve --open
+
+-------------------------------
+_id:string;
+name: string;
+position: string;
+office: string;
+salary: number;
+
+---------------------
+employee.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import {Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/toPromise';
+
+import { Employee } from './employee.model';
+
+----------------------------
+selectedEmployee:Employee;
+employees:Employee[];
